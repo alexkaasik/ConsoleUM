@@ -15,6 +15,7 @@ namespace ConsoleUM
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
