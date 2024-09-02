@@ -1,0 +1,33 @@
+﻿@model ConsoleUM.Models.Student
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Delete</h1>
+
+<p class="text-danger">@ViewData["Error message"]</p>
+<h3>Are you sure you want this to delete this?</h3>
+<div>
+    <h4></h4>
+    <hr />
+    <dl class="row">
+        <dt>
+            @Html.DisplayNameFor(Model => Model.LastName)
+        </dt>
+        <dd class="col-sm-2">
+            @Html.DisplayNameFor(Model => Model.FirstName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(Model => Model.EnrollmentDate)
+        </dt>
+        <dd class="col-sm-2">
+            @Html.DisplayNameFor(Model => Model.Enrollments)
+        </dd>
+    </dl>
+    <form action="/" method="post">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Delete" class="btn btn-danger" />
+        <a asp-action="Index">Back to list</a>
+    </form>
+</div>

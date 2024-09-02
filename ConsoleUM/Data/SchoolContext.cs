@@ -1,4 +1,7 @@
 ﻿using ConsoleUM.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleUM.Data
@@ -17,6 +20,5 @@ namespace ConsoleUM.Data
             modelBuilder.Entity<Enrollment>().ToTable("Enrollment");
             modelBuilder.Entity<Student>().ToTable("Student");
         }
-
     }
 }
