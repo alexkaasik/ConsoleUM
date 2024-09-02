@@ -2,6 +2,7 @@
 using ConsoleUM.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -12,12 +13,32 @@ namespace ConsoleUM.Controllers
         private readonly SchoolContext _context;
 
         public StudentController(SchoolContext context) { _context = context; }
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder)
         {
-            var result = await _context.Student.ToListAsync();
+            ViewData["nameSortParm"] = string.IsNullOrEmpty(sortOrder) ? "name-desc" : "";
+            ViewData["nameSortParm"] = sortOrder == "Date" ? "data_desc" : "Date";
 
+            var student = await _context.Student.ToListAsync();
 
-            return View(result);
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    student = student.OrderByDescending(s => s.LastName);
+                    break;
+                case "Date":
+                    student = student.OrderByDescending(s => s.EnrollmentDate);
+                    break;
+                case "date_desc":
+                    student = student.OrderByDescending(s => s.EnrollmentDate);
+                    break;
+                default:
+                    student = student.OrderBy(s => s.LastName);
+                    break;
+            }
+            return View(await student.AsNoTracking().ToListAsync());
+
+            //var result = await _context.Student.ToListAsync();
+            //return View(result);
         }
 
         public async Task<IActionResult> Details(int? id)
