@@ -1,3 +1,4 @@
+using ConsoleUM.Data;
 using ConsoleUM.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -7,10 +8,18 @@ namespace ConsoleUM.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly SchoolContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+
+
+        public HomeController
+            (
+                ILogger<HomeController> logger,
+                SchoolContext context
+            )
         {
             _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
@@ -27,6 +36,14 @@ namespace ConsoleUM.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+        public async Task<IActionResult> About()
+        {
+            IQueryable<EnrollmentDateGroup> date =
+                from Student in _context.Student
+                group Student by Student.EnrollmentDate into dateGroup
+                select
+
         }
     }
 }

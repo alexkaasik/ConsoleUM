@@ -13,12 +13,34 @@ namespace ConsoleUM.Controllers
         private readonly SchoolContext _context;
 
         public StudentController(SchoolContext context) { _context = context; }
-        public async Task<IActionResult> Index(string sortOrder)
+        public async Task<IActionResult> Index(
+            string sortOrder,
+            string searchString,
+            string currentFilter,
+            int? pageNumber
+        )
         {
             ViewData["nameSortParm"] = string.IsNullOrEmpty(sortOrder) ? "name-desc" : "";
-            ViewData["nameSortParm"] = sortOrder == "Date" ? "data_desc" : "Date";
+            ViewData["DateSortParm"] = sortOrder == "Date" ? "data_desc" : "Date";
+            ViewData["CurrentSort"] = sortOrder;
 
-            var student = await _context.Student.ToListAsync();
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            var student = from s in _context.Student
+                           select s;
+            if (!String.IsNullOrEmpty(searchString))
+            { 
+                student = student.Where(s => s.LastName.Contains(searchString)
+                                          || s.FirstName.Contains(searchString));
+            }
+
 
             switch (sortOrder)
             {
@@ -26,7 +48,7 @@ namespace ConsoleUM.Controllers
                     student = student.OrderByDescending(s => s.LastName);
                     break;
                 case "Date":
-                    student = student.OrderByDescending(s => s.EnrollmentDate);
+                    student = student.OrderBy(s => s.EnrollmentDate);
                     break;
                 case "date_desc":
                     student = student.OrderByDescending(s => s.EnrollmentDate);
@@ -35,7 +57,10 @@ namespace ConsoleUM.Controllers
                     student = student.OrderBy(s => s.LastName);
                     break;
             }
-            return View(await student.AsNoTracking().ToListAsync());
+            int pageSize = 3;
+            return View(await PaginatedList<Student>.CreateAsync(student.AsNoTracking(), pageNumber ?? 1, pageSize));
+
+            //return View(await student.AsNoTracking().ToListAsync());
 
             //var result = await _context.Student.ToListAsync();
             //return View(result);
@@ -58,6 +83,8 @@ namespace ConsoleUM.Controllers
             return View(student);
         }
 
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult>Create(Student student)
@@ -76,34 +103,76 @@ namespace ConsoleUM.Controllers
             return View(student);
         }
 
-        [HttpPost, ActionName("Edit")]
-        [ValidateAntiForgeryToken]
-
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            var studentToUpdate = await _context.Student.FirstOrDefaultAsync(s => s.Id == id);
-            
-            _context.Update(studentToUpdate);
-            await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index));
+            var student = await _context.Student.FindAsync(id);
+            if (student == null)
+            {
+                return NotFound();
+            }
+            return View(student);
+        }
+
+        [HttpPost, ActionName("Edit")]
+        [ValidateAntiForgeryToken]
+
+        public async Task<IActionResult> Edit(Student student)
+        {
+            if (student.Id != student.Id)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _context.Update(student);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException /* ex */)
+            {
+                //Log the error (uncomment ex variable name and write a log.)
+                ModelState.AddModelError("", "Unable to save changes. " +
+                    "Try again, and if the problem persists, " +
+                    "see your system administrator.");
+            }
+            return View(student);
         }
 
         public async Task<IActionResult> Delete(int? id, bool? saveChangesError = false)
         {
-            if (id == null) { return NotFound(); }
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var student = await _context.Student
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id);
+            if (student == null)
+            {
+                return NotFound();
+            }
 
             if (saveChangesError.GetValueOrDefault())
             {
-                ViewData["ErrorMessage"] = "Deletion has failed try again";
+                ViewData["ErrorMessage"] =
+                    "Delete failed. Try again, and if the problem presists " +
+                    "see your system administrator.";
             }
 
             return View(student);
         }
+
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConformtion(int id)
         {
             var student = await _context.Student.FindAsync(id);
@@ -117,9 +186,9 @@ namespace ConsoleUM.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex) { 
-            
-            
+            catch (DbUpdateException)
+            {
+                return RedirectToAction(nameof(Delete), new { id = id, saveChangesError = true });
             }
         }
     }
