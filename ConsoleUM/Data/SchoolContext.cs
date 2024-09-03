@@ -14,11 +14,23 @@ namespace ConsoleUM.Data
         public DbSet<Enrollment> Enrollments { get; set; }
         public DbSet<Student> Student { get; set; }
 
+        public DbSet<Student> Departments{ get; set; }
+
+        public DbSet<Student> Instuctors { get; set; }
+
+
+       // public DbSet<OfficeAssigment> OfficeAssigments { get; set; }
+
+
+        public DbSet<CourseAssigment>CourseAssigments { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Course>().ToTable("Course");
             modelBuilder.Entity<Enrollment>().ToTable("Enrollment");
             modelBuilder.Entity<Student>().ToTable("Student");
+
+            modelBuilder.Entity<CourseAssigment>().HasKey()
         }
     }
 }
